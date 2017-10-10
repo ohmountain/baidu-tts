@@ -2,8 +2,8 @@ const assert = require('assert');
 
 const BaiduTTS = require('../index.js');
 
-var key = "aaaa";
-var secret = "bbbb";
+var key    = "4IoG0CDktwjl7IgxZu50bbe5";
+var secret = "4b6ba04100a92ef6d84e49295feb2143";
 
 describe("new BaiduTTS()", function() {
 
@@ -34,4 +34,17 @@ describe(`new BaiduTTS(${key}, ${secret})`, function() {
             assert.equal(secret, tts.secretKey);
         });
     });
+
+    describe("requestToken()", function() {
+        it("token.expires_in must equals 2592000", async function() {
+            let token = await tts.requestToken();
+            assert.equal(token.expires_in, 2592000);
+        });
+
+        it("verifyToken()", function() {
+            assert.equal(true, tts.verifyToken());
+        });
+    });
+
+
 });
