@@ -25,6 +25,10 @@ describe(`new BaiduTTS(${key}, ${secret})`, function() {
 
     const tts = new BaiduTTS(key, secret);
 
+    if (tts.verifyToken() === false) {
+        tts.requestToken();
+    }
+
     describe("Valid akiKey and secretKey", function() {
         it(`tts.apiKey should equals ${key}`, function() {
             assert.equal(key, tts.apiKey);
@@ -36,7 +40,8 @@ describe(`new BaiduTTS(${key}, ${secret})`, function() {
     });
 
     describe("requestToken()", function() {
-        it("token.expires_in must equals 2592000", async function() {
+
+        it("token.expires_in must be equals 2592000", async function() {
             let token = await tts.requestToken();
             assert.equal(token.expires_in, 2592000);
         });
@@ -46,5 +51,11 @@ describe(`new BaiduTTS(${key}, ${secret})`, function() {
         });
     });
 
+    describe("requestVoice", function() {
 
+        it("test for requestVoice", async function() {
+            let voice = await tts.requestVoice("hello world");
+            assert.equal(voice, tts);
+        });
+    });
 });

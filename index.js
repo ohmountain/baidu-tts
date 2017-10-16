@@ -8,6 +8,7 @@ const https  = require('https');
 const colors = require('colors');
 
 class BaiduTTs {
+
     constructor(apiKey, secretKey) {
         if (apiKey == null || secretKey == null) {
             console.log(`\n${colors.yellow("ERROR").bgBlack} : ${colors.white("apiKey").bgBlack} and ${colors.white("secretKey").bgBlack} ${colors.red("can not be null")}\n`);
@@ -19,13 +20,17 @@ class BaiduTTs {
 
         this.url          = `https://openapi.baidu.com/oauth/2.0/token?grant_type=client_credentials&client_id=${this.apiKey}&client_secret=${this.secretKey}`;
         this.session_file = `${os.tmpdir()}/${md5(this.apiKey + this.secretKey)}`;
+
+        console.log(this.session_file);
     }
 
     getSessionInfo() {
         try {
-            return JSON.parse(fs.readFileSync(this.session_file, 'utf8'));
+            this.token = fs.readFileSync(this.session_file, 'utf8');
+            return JSON.parse(this.token);
         } catch(e) {
-            return {};
+            this.token = {};
+            return this.token;
         }
     }
 
@@ -49,7 +54,14 @@ class BaiduTTs {
     }
 
     requestToken() {
-         return new Promise((resolve, reject) => {
+
+        if (this.verifyToken()) {
+            return new Promise((resolve, reject) => {
+                resolve(JSON.parse(this.token));
+            });
+        }
+
+        return new Promise((resolve, reject) => {
             https.get(new URL(this.url), res => {
 
                 res.setEncoding('utf8');
@@ -68,7 +80,7 @@ class BaiduTTs {
                         resolve(parsedData);
                     } catch (e) {
                         console.log(`\n${colors.yellow("ERROR").bgBlack} :  ${colors.red(e.message)}\n`);
-                        reject();
+                        reject(e);
                     }
 
                 });
@@ -78,7 +90,22 @@ class BaiduTTs {
             });
         });
     }
-}
 
+    requestVoice(text, speed = 5, pit = 5, vol = 5, per = 5) {
+        return new Promise((resolve, reject) => {
+            this.requestToken().then(token => {
+                const url = `http://tsn.baidu.com/text2audio?text=${text}&tok=${token.access_token}&cuid=${token.access_token}&ctp=1&lan=zh&speed=${speed}&pit=${pit}&vol=${vol}&per=${per}`;
+                if (!this.audio_file) {
+                    this.audio_file = [];
+                    this.audio_file.push(`${os.tmpdir()}/${md5(url)}`);
+                }
+                resolve(this);
+            }).catch(e => {
+                console.log(`\n${colors.yellow("ERROR").bgBlack} :  ${colors.red(e.message)}\n`);
+                reject(e);
+            });
+        });
+    }
+}
 
 module.exports = BaiduTTs;
